@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="TestData_style.css">
+
+    <title>Your Website</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+    <div class="top-bar">
+        <img class="logo" src="logo.png" alto="logo">
+        <ul>
+            <li><a href="TestDataClient.html">Test data</a></li>
+            <li class="dropdown">
+                <a href="#">Linear</a>
+                <ul class="submenu">
+                    <li><a href="LinearCalcs.html">Linear clacs</a></li>
+                    <li><a href="LinearSum.html">Linear Sum</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#">Polynomials</a>
+                <ul class="submenu">
+                    <li><a href="PolynomialCalcs.html">Polynomials clacs</a></li>
+                    <li><a href="PolynomialSum.html">Polynomials Sum</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#">Logarithmic</a>
+                <ul class="submenu">
+                    <li><a href="LogarithmicCalc.html">Logarithmic clacs</a></li>
+                    <li><a href="LogarithmicSum.html">Logarithmic Sum</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#">Exponential</a>
+                <ul class="submenu">
+                    <li><a href="ExponentialCalcs.html">Exponential clacs</a></li>
+                    <li><a href="ExponentialSum.html">Exponential Sum</a></li>
+                </ul>
+            </li>
+            <li class="dropdown">
+                <a href="#">Power</a>
+                <ul class="submenu">
+                    <li><a href="PowerCalcs.html">Power clacs</a></li>
+                    <li><a href="PowerSum.html">Power Sum</a></li>
+                </ul>
+            </li>
+           
+            <li class="dropdown">
+                <a href="#">Others</a>
+                <ul class="submenu">
+                    <li><a href="BestModel.html">Best model</a></li>
+                    <li><a href="PredictedValues.html">Predicted value</a></li>
+                    <li><a href="SateTable.html">Stats table</a></li>
+                    <li><a href="Version.html">Version</a></li>
+                </ul>
+            </li>
+           
+        </ul>
+    </div>
+    <div class="container">
+        <h1>Correlation Test PM CEMS and reference method test data</h1>
+        <div class="button-container">
+            <label for="file-upload-input">Upload Data File:</label>
+            <input type="file" id="file-upload-input" accept=".txt">
+            <button id="submit-button">Submit</button>
+        </div>
+        <table id="result-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>PM CEMS Response</th>
+                    <th>PM Concentrations</th>
+                </tr>
+                <tr>
+                    <th>No</th>
+                    <th>X</th>
+                    <th>Y</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added dynamically here -->
+            </tbody>
+        </table>
+    </div>
+    <div class="chart-container">
+        <canvas id="chart"></canvas>
+    </div>
+    <table id="field-table">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Facility:</td>
+                <td>PLTMG BIMA</td>
+            </tr>
+            <tr>
+                <td>Location:</td>
+                <td>BIMA</td>
+            </tr>
+            <tr>
+                <td>Emission Unit:</td>
+                <td>STACK 1</td>
+            </tr>
+            <tr>
+                <td>Test Dates:</td>
+                <td>7/1/2023</td>
+            </tr>
+            <tr>
+                <td>Emission Limit:</td>
+                <td>15 mg/acm</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        const submitButton = document.getElementById('submit-button');
+        const resultTableBody = document.querySelector('#result-table tbody');
+        const chartCanvas = document.getElementById('chart');
+        const ctx = chartCanvas.getContext('2d');
+
+        function displayDataInTable(xValues, yValues) {
+            resultTableBody.innerHTML = '';
+
+            for (let i = 0; i < xValues.length; i++) {
+                const rowNumber = i + 1;
+                const newRow = `
+                    <tr>
+                        <td>${rowNumber}</td>
+                        <td>${xValues[i]}</td>
+                        <td>${yValues[i]}</td>
+                    </tr>
+                `;
+                resultTableBody.innerHTML += newRow;
+            }
+        }
+
+        function saveAndDisplayData(xValues, yValues) {
+            localStorage.setItem('xValues', JSON.stringify(xValues));
+            localStorage.setItem('yValues', JSON.stringify(yValues));
+            displayDataInTable(xValues, yValues);
+            updateChart(xValues, yValues);
+        }
+
+        function handleFileUpload(file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const fileContent = event.target.result;
+                const { xValues, yValues } = parseFileContent(fileContent);
+                saveAndDisplayData(xValues, yValues);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseFileContent(fileContent) {
+            const lines = fileContent.split('\n');
+            const xValues = [];
+            const yValues = [];
+
+            lines.forEach(line => {
+                const values = line.trim().split('\t');
+
+                if (values.length === 2) {
+                    const xValue = parseFloat(values[0]);
+                    const yValue = parseFloat(values[1]);
+
+                    if (!isNaN(xValue) && !isNaN(yValue)) {
+                        xValues.push(xValue);
+                        yValues.push(yValue);
+                    }
+                }
+            });
+
+            return { xValues, yValues };
+        }
+
+        function updateChart(xValues, yValues) {
+            const data = {
+                labels: xValues,
+                datasets: [
+                    {
+                        label: 'Y Values',
+                        data: yValues,
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 2,
+                        fill: false,
+                    },
+                ],
+            };
+
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X Values',
+                            },
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Y Values',
+                            },
+                        },
+                    },
+                },
+            };
+
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+            window.myChart = new Chart(ctx, config);
+        }
+
+        function loadAndDisplayTable() {
+            const xValuesJSON = localStorage.getItem('xValues');
+            const yValuesJSON = localStorage.getItem('yValues');
+
+            if (xValuesJSON && yValuesJSON) {
+                const xValues = JSON.parse(xValuesJSON);
+                const yValues = JSON.parse(yValuesJSON);
+                displayDataInTable(xValues, yValues);
+                updateChart(xValues, yValues);
+            }
+        }
+
+        loadAndDisplayTable();
+
+        submitButton.addEventListener('click', () => {
+            const fileUploadInput = document.getElementById('file-upload-input');
+            const file = fileUploadInput.files[0];
+            if (file) {
+                handleFileUpload(file);
+            }
+        });
+    </script>
+</body>
+</html>
