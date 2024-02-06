@@ -64,7 +64,7 @@
         </ul>
     </div>
     <div class="container">
-        <h1>Correlation Test PM CEMS and reference method test data</h1>
+        <h1>CORRELATION TEST PM CEMS AND REFERENCE METHOD TEST DATA</h1>
         <div class="button-container">
             <label for="file-upload-input">Upload Data File:</label>
             <input type="file" id="file-upload-input" accept=".txt">
@@ -91,7 +91,7 @@
     <div class="chart-container">
         <canvas id="chart"></canvas>
     </div>
-    <table id="field-table">
+ <table id="field-table">
         <thead>
             <tr>
                 <th>Field</th>
@@ -99,26 +99,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Facility:</td>
-                <td>PLTMG BIMA</td>
-            </tr>
-            <tr>
-                <td>Location:</td>
-                <td>BIMA</td>
-            </tr>
-            <tr>
-                <td>Emission Unit:</td>
-                <td>STACK 1</td>
-            </tr>
-            <tr>
-                <td>Test Dates:</td>
-                <td>7/1/2023</td>
-            </tr>
-            <tr>
-                <td>Emission Limit:</td>
-                <td>15 mg/acm</td>
-            </tr>
+            <!-- Field values will be added dynamically here -->
         </tbody>
     </table>
 
@@ -126,11 +107,12 @@
         const submitButton = document.getElementById('submit-button');
         const resultTableBody = document.querySelector('#result-table tbody');
         const chartCanvas = document.getElementById('chart');
+        const fieldTableBody = document.querySelector('#field-table tbody');
         const ctx = chartCanvas.getContext('2d');
-
+    
         function displayDataInTable(xValues, yValues) {
             resultTableBody.innerHTML = '';
-
+    
             for (let i = 0; i < xValues.length; i++) {
                 const rowNumber = i + 1;
                 const newRow = `
@@ -143,101 +125,138 @@
                 resultTableBody.innerHTML += newRow;
             }
         }
-
-        function saveAndDisplayData(xValues, yValues) {
+    
+        function displayFieldTable(fieldValues) {
+            fieldTableBody.innerHTML = '';
+    
+            Object.entries(fieldValues).forEach(([field, value]) => {
+                const newRow = `
+                    <tr>
+                        <td>${field}</td>
+                        <td>${value}</td>
+                    </tr>
+                `;
+                fieldTableBody.innerHTML += newRow;
+            });
+        }
+    
+        function saveAndDisplayData(xValues, yValues, fieldValues) {
             localStorage.setItem('xValues', JSON.stringify(xValues));
             localStorage.setItem('yValues', JSON.stringify(yValues));
+            localStorage.setItem('fieldValues', JSON.stringify(fieldValues));
+    
             displayDataInTable(xValues, yValues);
+            displayFieldTable(fieldValues);
+    
             updateChart(xValues, yValues);
         }
-
+    
         function handleFileUpload(file) {
             const reader = new FileReader();
             reader.onload = function (event) {
                 const fileContent = event.target.result;
-                const { xValues, yValues } = parseFileContent(fileContent);
-                saveAndDisplayData(xValues, yValues);
+                const { xValues, yValues, fieldValues } = parseFileContent(fileContent);
+                saveAndDisplayData(xValues, yValues, fieldValues);
             };
             reader.readAsText(file);
         }
-
+    
         function parseFileContent(fileContent) {
             const lines = fileContent.split('\n');
             const xValues = [];
             const yValues = [];
-
-            lines.forEach(line => {
-                const values = line.trim().split('\t');
-
+            const fieldValues = {};
+    
+            // Parse the field values from the first row
+            const fieldRow = lines[0].trim().split('\t');
+            fieldValues['Facility'] = fieldRow[0] || '';
+            fieldValues['Location'] = fieldRow[1] || '';
+            fieldValues['Emission Unit'] = fieldRow[2] || '';
+            fieldValues['Test Dates'] = fieldRow[3] || '';
+            fieldValues['Emission Limit'] = fieldRow[4] || '';
+    
+            // Parse the x and y values
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].trim().split('\t');
+    
                 if (values.length === 2) {
                     const xValue = parseFloat(values[0]);
                     const yValue = parseFloat(values[1]);
-
+    
                     if (!isNaN(xValue) && !isNaN(yValue)) {
                         xValues.push(xValue);
                         yValues.push(yValue);
                     }
                 }
-            });
-
-            return { xValues, yValues };
+            }
+    
+            return { xValues, yValues, fieldValues };
         }
-
+    
         function updateChart(xValues, yValues) {
-            const data = {
-                labels: xValues,
-                datasets: [
-                    {
-                        label: 'Y Values',
-                        data: yValues,
-                        borderColor: 'rgb(75, 192, 192)',
-                        borderWidth: 2,
-                        fill: false,
-                    },
-                ],
-            };
+    const data = {
+        labels: xValues,
+        datasets: [
+            {
+                label: 'Y Values',
+                data: yValues,
+                pointBackgroundColor: 'rgb(75, 192, 192)',
+                pointBorderColor: 'rgb(75, 192, 192)',
+                borderWidth: 0, // Set border width to 0 to hide the line
+            },
+        ],
+    };
 
-            const config = {
-                type: 'line',
-                data: data,
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'X Values',
-                            },
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Y Values',
-                            },
-                        },
+    const config = {
+        type: 'scatter', // Change type to 'scatter' for dots
+        data: data,
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'X Values',
                     },
                 },
-            };
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Y Values',
+                    },
+                },
+            },
+            plugins: {
+                legend: {
+                    display: false, // Hide the legend
+                },
+            },
+        },
+    };
 
-            if (window.myChart) {
-                window.myChart.destroy();
-            }
-            window.myChart = new Chart(ctx, config);
-        }
-
+    if (window.myChart) {
+        window.myChart.destroy();
+    }
+    window.myChart = new Chart(ctx, config);
+}
+    
         function loadAndDisplayTable() {
             const xValuesJSON = localStorage.getItem('xValues');
             const yValuesJSON = localStorage.getItem('yValues');
-
-            if (xValuesJSON && yValuesJSON) {
+            const fieldValuesJSON = localStorage.getItem('fieldValues');
+    
+            if (xValuesJSON && yValuesJSON && fieldValuesJSON) {
                 const xValues = JSON.parse(xValuesJSON);
                 const yValues = JSON.parse(yValuesJSON);
+                const fieldValues = JSON.parse(fieldValuesJSON);
+    
                 displayDataInTable(xValues, yValues);
+                displayFieldTable(fieldValues);
                 updateChart(xValues, yValues);
             }
         }
-
+    
         loadAndDisplayTable();
-
+    
         submitButton.addEventListener('click', () => {
             const fileUploadInput = document.getElementById('file-upload-input');
             const file = fileUploadInput.files[0];
@@ -246,5 +265,7 @@
             }
         });
     </script>
+    
 </body>
+
 </html>
