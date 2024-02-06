@@ -60,7 +60,7 @@
            
         </ul>
     </div>
-    <h1>Exponential Clacs</h1>
+    <h1>CALCULATIONS FOR EXPONENTIAL CORRELATION</h1>
 
     <table id="Exponential-table">
         <thead>
@@ -81,55 +81,58 @@
         </tbody>
     </table>
 
-                    <!-- Create a table to display the fields -->
-                    <table id="field-table">
-                        <tbody>
-                            <tr>
-                                <td>Facility:</td>
-                                <td>PLTMG BIMA</td>
-                            </tr>
-                            <tr>
-                                <td>Location:</td>
-                                <td>BIMA</td>
-                            </tr>
-                            <tr>
-                                <td>Emission Unit:</td>
-                                <td>STACK 1</td>
-                            </tr>
-                            <tr>
-                                <td>Test Dates:</td>
-                                <td>7/1/2023</td>
-                            </tr>
-                            <tr>
-                                <td>Emission Limit:</td>
-                                <td>15 mg/acm</td>
-                            </tr>
-                        </tbody>
-                    </table>   
+<!-- Create a table to display the fields -->
+<table id="field-table">
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Facility:</td>
+            <td id="facility-summary"></td>
+        </tr>
+        <tr>
+            <td>Location:</td>
+            <td id="location-summary"></td>
+        </tr>
+        <tr>
+            <td>Emission Unit:</td>
+            <td id="emission-unit-summary"></td>
+        </tr>
+        <tr>
+            <td>Test Dates:</td>
+            <td id="test-dates-summary"></td>
+        </tr>
+        <tr>
+            <td>Emission Limit:</td>
+            <td id="emission-limit-summary"></td>
+        </tr>
+    </tbody>
+</table>  
     
     <script>
 
         
-            function updateFieldValues() {
-                        // ... (your field values update code) ...
-                    }
-            function updateFieldValues() {
-            const testDataJSON = localStorage.getItem('testData');
-            // Retrieve and display Facility, Location, Emission Unit, and Test Dates
-            if (testDataJSON) {
-                const testData = JSON.parse(testDataJSON);
+function updateFieldValues() {
+    // Retrieve and display Facility, Location, Emission Unit, and Test Dates
+    const testDataJSON = localStorage.getItem('fieldValues');
 
-                // Display Facility, Location, Emission Unit, and Test Dates
-                document.getElementById('facility-summary').textContent += testData.facility;
-                document.getElementById('location-summary').textContent += testData.location;
-                document.getElementById('emission-unit-summary').textContent += testData.emissionUnit;
-                document.getElementById('test-dates-summary').textContent += testData.testDates;
-                document.getElementById('emission-limit-summary').textContent += testData.emissionLimit;
-            }
-        }
+    if (testDataJSON) {
+        const fieldValues = JSON.parse(testDataJSON);
+
+        // Display Facility, Location, Emission Unit, Test Dates, and Emission Limit
+        document.getElementById('facility-summary').textContent = fieldValues['Facility'] || '';
+        document.getElementById('location-summary').textContent = fieldValues['Location'] || '';
+        document.getElementById('emission-unit-summary').textContent = fieldValues['Emission Unit'] || '';
+        document.getElementById('test-dates-summary').textContent = fieldValues['Test Dates'] || '';
+        document.getElementById('emission-limit-summary').textContent = fieldValues['Emission Limit'] || '';
+    }
+}
+
         
-
-
         // Place your JavaScript code inside a DOMContentLoaded event listener
         document.addEventListener("DOMContentLoaded", function() {
             // Retrieve values of x and y from Test Data page
